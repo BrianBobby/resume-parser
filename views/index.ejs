@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Reader</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <h1>Resume Reader</h1>
+      <p>Upload a resume as a PDF, Word document, or photo/scan.</p>
+    </header>
+
+    <% if (error) { %>
+      <div class="error-banner"><%= error %></div>
+    <% } %>
+
+    <div class="upload-card">
+      <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+        <label class="dropzone" id="dropzone" for="resume-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12"/>
+            <path d="M7 8l5-5 5 5"/>
+            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+          </svg>
+          <p class="primary">Drop a resume here, or click to browse</p>
+          <p class="secondary">PDF, DOC, DOCX, JPG, PNG &mdash; up to 10MB</p>
+          <input type="file" id="resume-input" name="resume" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.txt">
+        </label>
+
+        <div class="file-chip" id="file-chip">
+          <span class="name" id="file-name"></span>
+          <button type="button" id="file-clear">Remove</button>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="primary-btn" id="submit-btn" disabled>Read resume</button>
+          <span class="status-text" id="status-text"></span>
+        </div>
+      </form>
+
+      </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const input = document.getElementById('resume-input');
+    const chip = document.getElementById('file-chip');
+    const fileNameEl = document.getElementById('file-name');
+    const clearBtn = document.getElementById('file-clear');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusText = document.getElementById('status-text');
+    const form = document.getElementById('upload-form');
+
+    function showFile(file) {
+      if (!file) return;
+      fileNameEl.textContent = file.name;
+      chip.classList.add('is-visible');
+      submitBtn.disabled = false;
+    }
+
+    input.addEventListener('change', () => showFile(input.files[0]));
+    let dragDepth = 0;
+
+    ['dragenter', 'dragover', 'drop'].forEach(evt => {
+      document.addEventListener(evt, (e) => e.preventDefault());
+    });
+
+    document.addEventListener('dragenter', (e) => {
+      dragDepth++;
+      dropzone.classList.add('is-dragover');
+    });
+
+    document.addEventListener('dragleave', () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) dropzone.classList.remove('is-dragover');
+    });
+
+    document.addEventListener('drop', (e) => {
+      dragDepth = 0;
+      dropzone.classList.remove('is-dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        input.files = e.dataTransfer.files;
+        showFile(file);
+      }
+    });
+
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      input.value = '';
+      chip.classList.remove('is-visible');
+      submitBtn.disabled = true;
+    });
+
+    form.addEventListener('submit', () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Reading...';
+      statusText.textContent = 'This can take up to 20 seconds.';
+    });
+  </script>
+</body>
+</html>
